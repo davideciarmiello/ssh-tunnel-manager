@@ -101,6 +101,7 @@
     <Compile Include="Domain\ForwardingResult.cs" />
     <Compile Include="Domain\HostsManager.cs" />
     <Compile Include="Domain\IPuttyLink.cs" />
+    <Compile Include="Domain\NetStatPortsAndProcessNames.cs" />
     <Compile Include="Domain\PrivateKey.cs" />
     <Compile Include="Domain\PrivateKeysStorage.cs" />
     <Compile Include="Domain\PropertyType.cs" />

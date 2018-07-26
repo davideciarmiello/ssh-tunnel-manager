@@ -46,7 +46,7 @@ namespace SSHTunnelManagerGUI.Forms
                 host.StatusChanged += onHostStatusChanged;
             }
             _bindingSource = new BindingSource(_hostsManager, "Hosts");
-            
+
             hostsGridView.AutoGenerateColumns = false;
             hgwStatusIconColumn.DataPropertyName = @"StatusIcon";
             hgwNameColumn.DataPropertyName = @"Name";
@@ -62,7 +62,7 @@ namespace SSHTunnelManagerGUI.Forms
 
             ActiveControl = hostsGridView;
 
-            var hostAppender = (DelegateAppender) Logger.GetAppender(Program.HostLogDelegateAppender);
+            var hostAppender = (DelegateAppender)Logger.GetAppender(Program.HostLogDelegateAppender);
             hostAppender.SyncObject = this;
             hostAppender.OnAppend += onHostLogAppended;
 
@@ -138,7 +138,7 @@ namespace SSHTunnelManagerGUI.Forms
             }
             finally
             {
-                Invoke((Action) (() => { theTimer.Enabled = true; }));
+                Invoke((Action)(() => { theTimer.Enabled = true; }));
             }
         }
 
@@ -195,15 +195,15 @@ namespace SSHTunnelManagerGUI.Forms
             imageListStates.Images.Add(@"Root", Resources.Servers);
             treeViewFilter.Nodes[0].ImageKey = @"Root";
             treeViewFilter.Nodes[0].SelectedImageKey = @"Root";
-            var statuses = Enum.GetValues(typeof (ELinkStatus)).Cast<ELinkStatus>().
+            var statuses = Enum.GetValues(typeof(ELinkStatus)).Cast<ELinkStatus>().
                 GroupBy(HostViewModel.GetStatusText).ToArray();
             foreach (var status in statuses)
             {
                 imageListStates.Images.Add(status.Key, HostViewModel.GetStatusIcon(status.First()));
             }
             var nodes = statuses.Select(g => new TreeNode(g.Key, imageListStates.Images.IndexOfKey(g.Key),
-                                                          imageListStates.Images.IndexOfKey(g.Key)) 
-                                                 { Tag = g.ToArray() }).ToArray();
+                                                          imageListStates.Images.IndexOfKey(g.Key))
+            { Tag = g.ToArray() }).ToArray();
             treeViewFilter.Nodes[0].Nodes.AddRange(nodes);
             treeViewFilter.ExpandAll();
             treeViewFilter.SelectedNode = treeViewFilter.Nodes[0];
@@ -325,7 +325,7 @@ namespace SSHTunnelManagerGUI.Forms
         {
             if (_bindingSource.Current == null)
                 return null;
-            return ((ObjectView<HostViewModel>) _bindingSource.Current).Object;
+            return ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
         }
 
         private void updateHost(HostViewModel host)
@@ -343,15 +343,15 @@ namespace SSHTunnelManagerGUI.Forms
                                                Util.AssemblyTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             switch (res)
             {
-            case DialogResult.Yes:
-                save();
-                break;
-            case DialogResult.No:
-                // exit without save
-                break;
-            case DialogResult.Cancel:
-                // cancel exit
-                return false;
+                case DialogResult.Yes:
+                    save();
+                    break;
+                case DialogResult.No:
+                    // exit without save
+                    break;
+                case DialogResult.Cancel:
+                    // cancel exit
+                    return false;
             }
             return true;
         }
@@ -409,9 +409,9 @@ namespace SSHTunnelManagerGUI.Forms
         private void addHost()
         {
             var hd = new HostDialog(HostDialog.EMode.AddHost, _hostsManager.HostInfoList)
-                         {
-                             StartupDependsOn = selectedHostInfo()
-                         };
+            {
+                StartupDependsOn = selectedHostInfo()
+            };
             hd.ShowDialog(this);
             foreach (var host in hd.CreatedHosts)
             {
@@ -429,7 +429,7 @@ namespace SSHTunnelManagerGUI.Forms
             if (host.Model.Link.Status != ELinkStatus.Stopped)
                 return;
 
-            var hd = new HostDialog(HostDialog.EMode.EditHost, _hostsManager.HostInfoList) {Host = host.Model.Info};
+            var hd = new HostDialog(HostDialog.EMode.EditHost, _hostsManager.HostInfoList) { Host = host.Model.Info };
             var res = hd.ShowDialog(this);
             if (res == DialogResult.Cancel)
             {
@@ -458,13 +458,13 @@ namespace SSHTunnelManagerGUI.Forms
 
             if (depHosts.Count > 0)
             {
-                var res1 = MessageBox.Show(this, string.Format(Resources.MessageBoxText_RemoveHostAsk2, 
-                    host.Name, Environment.NewLine, string.Join(Environment.NewLine, depHostsDeep.Select(h => h.Name))), 
+                var res1 = MessageBox.Show(this, string.Format(Resources.MessageBoxText_RemoveHostAsk2,
+                    host.Name, Environment.NewLine, string.Join(Environment.NewLine, depHostsDeep.Select(h => h.Name))),
                     Util.AssemblyTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (res1 == DialogResult.No)
                     return;
 
-                new Thread(delegate()
+                new Thread(delegate ()
                                {
                                    host.Model.Link.Stop();
                                    host.Model.Link.WaitForStop();
@@ -479,14 +479,15 @@ namespace SSHTunnelManagerGUI.Forms
                     /*_bindingSource.Remove(host1);
                     host1.StatusChanged -= onHostStatusChanged;*/
                 }
-            } else
+            }
+            else
             {
                 var res2 = MessageBox.Show(this, string.Format(Resources.MessageBoxText_RemoveHostAsk, host.Name),
                     Util.AssemblyTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (res2 == DialogResult.No)
                     return;
 
-                new Thread(delegate()
+                new Thread(delegate ()
                                {
                                    host.Model.Link.Stop();
                                    host.Model.Link.WaitForStop();
@@ -500,7 +501,7 @@ namespace SSHTunnelManagerGUI.Forms
 
         private void startHost()
         {
-            var viewmodel = ((ObjectView<HostViewModel>) _bindingSource.Current).Object;
+            var viewmodel = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
             var host = viewmodel.Model.Info;
 
             if (viewmodel.Model.Link.Status != ELinkStatus.Stopped)
@@ -545,7 +546,7 @@ namespace SSHTunnelManagerGUI.Forms
             //((ObjectView<HostViewModel>) _bindingSource.Current).Object.Model.Link.Stop();
 
             // stop all childrens
-            var hvm = ((ObjectView<HostViewModel>) _bindingSource.Current).Object;
+            var hvm = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
             var hosts = _hostsManager.DependentHosts(hvm, true).Select(vm => vm.Model);
             foreach (var host in hosts.Reverse().Where(h => h.Link.Status != ELinkStatus.Stopped))
             {
@@ -561,7 +562,7 @@ namespace SSHTunnelManagerGUI.Forms
             {
                 var viewmodel = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
                 var host = viewmodel.Model.Info;
-            
+
                 ConsoleTools.StartPutty(host, _hostsManager.PuttyProfile);
             }
             catch (Exception e)
@@ -669,7 +670,7 @@ namespace SSHTunnelManagerGUI.Forms
             }
 
             h.AddEventToLog(e.AppendedData);
-            if (_bindingSource.Current != null && 
+            if (_bindingSource.Current != null &&
                 ((ObjectView<HostViewModel>)_bindingSource.Current).Object.Model.Info == h)
             {
                 // this is current Host
@@ -907,7 +908,7 @@ namespace SSHTunnelManagerGUI.Forms
                 return;
             var name = hostsGridView.Rows[e.RowIndex].Cells[hgwNameColumn.Name].Value.ToString();
             var host = _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Select(m => m.Object).First(m => m.Name == name);
-            
+
             if (host.Model.Link.Status == ELinkStatus.Stopped)
             {
                 startHost();
@@ -951,7 +952,7 @@ namespace SSHTunnelManagerGUI.Forms
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
                 return;
 
-            var host = ((ObjectView<HostViewModel>) _bindingSource.Current).Object.Model;
+            var host = ((ObjectView<HostViewModel>)_bindingSource.Current).Object.Model;
             if (host.Link.Status != ELinkStatus.StartedWithWarnings)
                 return;
             var tname = tunnelsGridView.Rows[e.RowIndex].Cells[tgvNameColumn.Name].Value.ToString();
@@ -1011,6 +1012,30 @@ namespace SSHTunnelManagerGUI.Forms
             {
                 restartHostsBeingActiveLastTimeAsync();
             }
+        }
+
+        private void listViewLog_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listViewLog_MouseClick(object sender, MouseEventArgs e)
+        {
+            //var theClickedOne = listViewLog.GetItemAt(e.X, e.Y);
+            //if (theClickedOne != null)
+            //{
+            //    Clipboard.SetText(theClickedOne.Text);
+            //}
+        }
+
+        private void listViewLog_DoubleClick(object sender, EventArgs e)
+        {
+            if (listViewLog.SelectedItems.Count == 1)
+            {//display the text of selected item
+
+                Clipboard.SetText(listViewLog.SelectedItems[0].Text);
+            }
+
         }
     }
 }
