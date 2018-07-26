@@ -69,7 +69,7 @@ namespace SSHTunnelManager.Domain
                                        host.Hostname, host.Port);
                 break;
             case AuthenticationType.PrivateKey:
-                args = String.Format(@"-ssh{0} {1}@{2} -P {3} -i {4} -v{5}", profileArg, host.Username, host.Hostname,
+                args = String.Format(@"-ssh{0} {1}@{2} -P {3} -i ""{4}"" -v{5}", profileArg, host.Username, host.Hostname,
                                      host.Port, PrivateKeysStorage.CreatePrivateKey(host).Filename, startShellOption);
                 Logger.Log.DebugFormat(@"plink.exe {0}", args);
                 break;
