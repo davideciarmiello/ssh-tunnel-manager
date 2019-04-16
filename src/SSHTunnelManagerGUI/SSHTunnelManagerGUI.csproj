@@ -304,6 +304,9 @@
     <None Include="Resources\154.png" />
     <None Include="Resources\servers.png" />
     <None Include="Resources\gear.png" />
+    <None Include="Resources\terminal-green.ico" />
+    <None Include="Resources\terminal-yellow.ico" />
+    <None Include="Resources\terminal.ico" />
     <Content Include="terminal.ico" />
   </ItemGroup>
   <ItemGroup>

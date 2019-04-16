@@ -43,41 +43,43 @@ namespace SSHTunnelManager.Domain
 
                 switch (value)
                 {
-                case ELinkStatus.Starting:
-                    Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Starting);
-                    break;
-                case ELinkStatus.Started:
-                    Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Started);
-                    break;
-                case ELinkStatus.StartedWithWarnings:
-                    Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_StartedWithWarnings);
-                    break;
-                case ELinkStatus.Stopped:
-                    Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Stopped);
-                    break;
-                case ELinkStatus.Waiting:
-                    if (_config.RestartDelay > 0)
-                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, string.Format(Resources.PuttyLink_Status_Waiting, _config.RestartDelay));
-                    else
-                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Restarting);
-                    break;
+                    case ELinkStatus.Starting:
+                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Starting);
+                        break;
+                    case ELinkStatus.Started:
+                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Started);
+                        break;
+                    case ELinkStatus.StartedWithWarnings:
+                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_StartedWithWarnings);
+                        break;
+                    case ELinkStatus.Stopped:
+                        Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Stopped);
+                        break;
+                    case ELinkStatus.Waiting:
+                        if (_config.RestartDelay > 0)
+                            Logger.Log.InfoFormat("[{0}] {1}", Host.Name, string.Format(Resources.PuttyLink_Status_Waiting, _config.RestartDelay));
+                        else
+                            Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Restarting);
+                        break;
                 }
-                
+
                 _status = value;
                 onLinkStatusChanged();
 
                 if (_status == ELinkStatus.Stopped)
                 {
                     _eventStopped.Set();
-                } else
+                }
+                else
                 {
                     _eventStopped.Reset();
                 }
-                if (_status == ELinkStatus.Started || 
+                if (_status == ELinkStatus.Started ||
                     _status == ELinkStatus.StartedWithWarnings)
                 {
                     _eventStarted.Set();
-                } else
+                }
+                else
                 {
                     _eventStarted.Reset();
                 }
@@ -132,7 +134,7 @@ namespace SSHTunnelManager.Domain
             {
                 throw new InvalidOperationException(Resources.PuttyLink_Error_LinkAlreadyStarted);
             }
-            Thread thread = new Thread(Start) {IsBackground = true};
+            Thread thread = new Thread(Start) { IsBackground = true };
             thread.Start();
         }
 
@@ -158,15 +160,25 @@ namespace SSHTunnelManager.Domain
                     Status = ELinkStatus.Starting;
                     var success = startOnce();
                     atleastOneSuccess = atleastOneSuccess || success;
-                    if (_stopRequested || !atleastOneSuccess || !_config.RestartEnabled)
+                    if (_stopRequested)
                         break;
+                    if (!_config.RestartEnabled)
+                        break;
+                    //if (_stopRequested || !atleastOneSuccess || !_config.RestartEnabled)
+                    //    break;
                     if (success)
                         i = 0;
                     if (i >= _config.MaxAttemptsCount && _config.RestartDelay > 0)
                     {
                         Status = ELinkStatus.Waiting;
-                        Thread.Sleep(_config.RestartDelay * 1000);
-                    } else
+                        for (int j = 0; j < _config.RestartDelay * 2; j++)
+                        {
+                            if (_stopRequested)
+                                break;
+                            Thread.Sleep(500);
+                        }
+                    }
+                    else
                     {
                         Logger.Log.InfoFormat("[{0}] {1}", Host.Name, Resources.PuttyLink_Status_Restarting);
                     }
@@ -240,8 +252,8 @@ namespace SSHTunnelManager.Domain
 
             // Процесс
             _process = new Process
-                           {
-                               StartInfo =
+            {
+                StartInfo =
                                    {
                                        FileName = ConsoleTools.PLinkLocation,
                                        CreateNoWindow = true,
@@ -251,7 +263,7 @@ namespace SSHTunnelManager.Domain
                                        RedirectStandardInput = true,
                                        Arguments = ConsoleTools.PuttyArguments(Host, _profile, Host.AuthType)
                                    }
-                           };
+            };
 
             _process.ErrorDataReceived += errorDataHandler;
             _process.Start();
@@ -266,7 +278,7 @@ namespace SSHTunnelManager.Domain
             {
                 while (_process.StandardOutput.Peek() >= 0)
                 {
-                    char c = (char) _process.StandardOutput.Read();
+                    char c = (char)_process.StandardOutput.Read();
                     buffer.Append(c);
                 }
 

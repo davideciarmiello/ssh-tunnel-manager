@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -77,6 +78,9 @@ namespace SSHTunnelManagerGUI.Forms
                 theTimer.Start();
             }
 
+            NetworkChange.NetworkAvailabilityChanged += NetworkChangeOnNetworkAvailabilityChanged;
+            NetworkChange.NetworkAddressChanged += NetworkChangeOnNetworkAddressChanged;
+
             /*var backColor = DefaultBackColor;
             if (VisualStyleInformation.IsSupportedByOS && VisualStyleInformation.IsEnabledByUser)
             {
@@ -94,6 +98,45 @@ namespace SSHTunnelManagerGUI.Forms
             tunnelsGridView.BackgroundColor = backColor;
             tunnelsGridView.RowsDefaultCellStyle.BackColor = backColor;*/
         }
+
+        private void NetworkChangeOnNetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs networkAvailabilityEventArgs)
+        {
+            if (networkAvailabilityEventArgs.IsAvailable)
+                NetworkChangeOnNetworkAddressChanged(sender, networkAvailabilityEventArgs);
+        }
+        private void NetworkChangeOnNetworkAddressChanged(object sender, EventArgs eventArgs)
+        {
+            Thread t = new Thread(() =>
+            {
+                try
+                {
+                    var hosts = _hostsManager.HostsList.Where(h => h.Link.Status == ELinkStatus.Starting || h.Link.Status == ELinkStatus.Waiting).ToList();
+                    foreach (var host in hosts)
+                    {
+                        if (host.Link.Status != ELinkStatus.Stopped)
+                        {
+                            // Status could be changed from list creating
+                            host.Link.Stop();
+                            if (!host.Link.WaitForStop())
+                            {
+                                Logger.Log.WarnFormat(
+                                    "STOP action for host '{0}' timed out. Skipping host in this Restart-Hosts-With-Warnings tick.",
+                                    host.Info.Name);
+                                continue;
+                            }
+                        }
+                        host.Link.AsyncStart();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log.ErrorFormat("Error while Restart-Hosts-With-Warnings tick: {0}", ex.Message);
+                }
+            });
+            t.IsBackground = true;
+            t.Start();
+        }
+
 
         private void onRestartHostsWithWarningsTick(object sender, EventArgs e)
         {
@@ -607,13 +650,13 @@ namespace SSHTunnelManagerGUI.Forms
                 return;
 
             theTimer.Enabled = false;
+            saveActiveHostsNames();
             var activeHosts = _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Where(
                 o => o.Object.Model.Link.Status != ELinkStatus.Stopped).Select(o => o.Object.Model).ToList();
             foreach (var host in activeHosts)
             {
                 host.Link.Stop();
             }
-            saveActiveHostsNames();
             ReallyClose();
         }
 
@@ -700,6 +743,14 @@ namespace SSHTunnelManagerGUI.Forms
             // This handler executing not in UI thread.
             Invoke((Action)delegate
                                {
+                                   var allStatus = _hostsManager.HostsList.Select(h => h.Link.Status).Distinct().ToList();
+                                   if (allStatus.Any(x => x == ELinkStatus.Starting || x == ELinkStatus.Waiting))
+                                       this.Icon = Resources.terminal_yellow;
+                                   else if (allStatus.Any(x => x == ELinkStatus.Started || x == ELinkStatus.StartedWithWarnings))
+                                       this.Icon = Resources.terminal_green;
+                                   else
+                                       this.Icon = Resources.terminal;
+
                                    var hvm = (HostViewModel)sender;
                                    updateHost(hvm);
                                    if (_bindingSource.Current == hvm)
@@ -1035,6 +1086,16 @@ namespace SSHTunnelManagerGUI.Forms
 
                 Clipboard.SetText(listViewLog.SelectedItems[0].Text);
             }
+
+        }
+
+        private void hostsGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
 
         }
     }

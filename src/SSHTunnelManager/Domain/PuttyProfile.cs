@@ -19,37 +19,61 @@ namespace SSHTunnelManager.Domain
 
         static PuttyProfile()
         {
-            _defaultProfileProperties = Resources.defaultPuttyProfile.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries).Skip(3).
+            _defaultProfileProperties = Resources.defaultPuttyProfile.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Skip(3).
                 Select(parseLine).Except(new PuttyProfileProperty[] { null }).ToDictionary(p => p.Name);
         }
 
         private static PuttyProfileProperty parseLine(string line)
         {
-            var m = Regex.Match(line, @"((?<name>[^""=]+)|""(?<name>([^""]|(?<=\\)"")+)"")=(((?<type>\w+):)?(?<value>[^""=]*)|""((?<type>\w+:)?(?<value>([^""]|(?<=\\)"")*))"")");
-            if (!m.Success)
-            {
+            if (string.IsNullOrEmpty(line))
                 return null;
-            }
-
-            var name = m.Groups["name"].Value.Replace(@"\""", @"""");
-            var value = m.Groups["value"].Value.Replace(@"\""", @"""");
-            var type = m.Groups["type"].Value;
+            var s1 = line.Split(new[] { '=' }, 2, StringSplitOptions.None);
+            if (s1.Length != 2)
+                return null;
+            var name = s1[0].Trim('"').Replace(@"\""", @"""");
+            var value = s1[1];
             object resValue;
             PropertyType resType;
-                
-            if (string.IsNullOrEmpty(type))
+            if (value.StartsWith(@""""))
             {
-                resValue = value;
+                resValue = value.Trim('"').Replace(@"\""", @"""");
                 resType = PropertyType.String;
-            } else if (type == @"dword")
+            }
+            else if (value.StartsWith("dword:"))
             {
-                resValue = int.Parse(value, NumberStyles.AllowHexSpecifier);
+                resValue = int.Parse(value.Replace("dword:", ""), NumberStyles.AllowHexSpecifier);
                 resType = PropertyType.Int32;
             }
             else
             {
                 throw new NotSupportedException();
             }
+
+            //var m = Regex.Match(line, @"((?<name>[^""=]+)|""(?<name>([^""]|(?<=\\)"")+)"")=(((?<type>\w+):)?(?<value>[^""=]*)|""((?<type>\w+:)?(?<value>([^""]|(?<=\\)"")*))"")");
+            //if (!m.Success)
+            //{
+            //    return null;
+            //}
+
+            //var name = m.Groups["name"].Value.Replace(@"\""", @"""");
+            //var value = m.Groups["value"].Value.Replace(@"\""", @"""");
+            //var type = m.Groups["type"].Value;
+
+
+            //if (string.IsNullOrEmpty(type))
+            //{
+            //    resValue = value;
+            //    resType = PropertyType.String;
+            //}
+            //else if (type == @"dword")
+            //{
+            //    resValue = int.Parse(value, NumberStyles.AllowHexSpecifier);
+            //    resType = PropertyType.Int32;
+            //}
+            //else
+            //{
+            //    throw new NotSupportedException();
+            //}
 
             return new PuttyProfileProperty(name) { Value = resValue, Type = resType };
         }
@@ -88,7 +112,7 @@ namespace SSHTunnelManager.Domain
                         return null;
                     }
 
-                    var profile = new PuttyProfile {Name = profileName};
+                    var profile = new PuttyProfile { Name = profileName };
                     foreach (var name in profileKey.GetValueNames())
                     {
                         var value = profileKey.GetValue(name);
@@ -143,14 +167,14 @@ namespace SSHTunnelManager.Domain
                         RegistryValueKind kind;
                         switch (property.Type)
                         {
-                        case PropertyType.String:
-                            kind = RegistryValueKind.String;
-                            break;
-                        case PropertyType.Int32:
-                            kind = RegistryValueKind.DWord;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                            case PropertyType.String:
+                                kind = RegistryValueKind.String;
+                                break;
+                            case PropertyType.Int32:
+                                kind = RegistryValueKind.DWord;
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
                         profileKey.SetValue(property.Name, property.Value, kind);
                     }
@@ -275,7 +299,7 @@ namespace SSHTunnelManager.Domain
 
         private string getString(string name)
         {
-            return (string) getOrCreate(name).Value;
+            return (string)getOrCreate(name).Value;
         }
 
         private void setInt(string name, int value)
@@ -288,7 +312,7 @@ namespace SSHTunnelManager.Domain
 
         private int getInt(string name)
         {
-            return (int) getOrCreate(name).Value;
+            return (int)getOrCreate(name).Value;
         }
 
         private void setBool(string name, bool value)

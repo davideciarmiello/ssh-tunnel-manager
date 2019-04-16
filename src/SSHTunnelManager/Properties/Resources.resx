@@ -135,10 +135,6 @@
   <data name="CannotSetItem" xml:space="preserve">
     <value>Cannot set an item in the view.</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="defaultPuttyProfile" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\defaultPuttyProfile.reg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-16</value>
-  </data>
   <data name="IncludeDelegateCannotBeNull" xml:space="preserve">
     <value>includeDelegate cannot be null.</value>
   </data>
@@ -238,10 +234,14 @@
   <data name="PuttyProfile_Error_CreateSubKeyReturnedNull" xml:space="preserve">
     <value>Error while creating PuTTY profile {0}: unknown error.</value>
   </data>
-  <data name="PuttyProfile_Error_RegistryValueKindNotSupported">
-    <value xml:space="preserve">Registry value kind is not supported.</value>
+  <data name="PuttyProfile_Error_RegistryValueKindNotSupported" xml:space="preserve">
+    <value>Registry value kind is not supported.</value>
   </data>
-  <data name="PuttyProfile_Error_SecurityException2">
-    <value xml:space="preserve">Security error while reading PuTTY profile {0}: {1}</value>
+  <data name="PuttyProfile_Error_SecurityException2" xml:space="preserve">
+    <value>Security error while reading PuTTY profile {0}: {1}</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="defaultPuttyProfile" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\defaultPuttyProfile.reg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-16</value>
   </data>
 </root>

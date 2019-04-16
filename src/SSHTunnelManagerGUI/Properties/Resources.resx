@@ -364,4 +364,13 @@
   <data name="ValidatorError_LocalPortBusyAnotherHost" xml:space="preserve">
     <value>Local port is used by other tunnel with host '{0}'.</value>
   </data>
+  <data name="terminal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\terminal.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="terminal_green" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\terminal-green.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="terminal_yellow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\terminal-yellow.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
