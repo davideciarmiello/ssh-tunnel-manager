@@ -455,7 +455,7 @@ namespace SSHTunnelManagerGUI.Forms
         {
             var hd = new HostDialog(HostDialog.EMode.AddHost, _hostsManager.HostInfoList)
             {
-                StartupDependsOn = selectedHostInfo()
+                //StartupDependsOn = selectedHostInfo()
             };
             hd.ShowDialog(this);
             foreach (var host in hd.CreatedHosts)
@@ -471,14 +471,21 @@ namespace SSHTunnelManagerGUI.Forms
 
         private void editHost(HostViewModel host)
         {
-            if (host.Model.Link.Status != ELinkStatus.Stopped)
-                return;
-
             var hd = new HostDialog(HostDialog.EMode.EditHost, _hostsManager.HostInfoList) { Host = host.Model.Info };
             var res = hd.ShowDialog(this);
             if (res == DialogResult.Cancel)
             {
                 return;
+            }
+
+            if (host.Model.Link.Status != ELinkStatus.Stopped)
+            {
+                var hvm = host;
+                var hosts = _hostsManager.DependentHosts(hvm, true).Select(vm => vm.Model);
+                foreach (var it in hosts.Reverse().Where(h => h.Link.Status != ELinkStatus.Stopped))
+                    it.Link.Stop();
+                if (hvm.Model.Link.Status != ELinkStatus.Stopped)
+                    hvm.Model.Link.Stop();
             }
 
             var dependentHosts =
