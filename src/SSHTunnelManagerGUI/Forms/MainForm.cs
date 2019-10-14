@@ -335,7 +335,7 @@ namespace SSHTunnelManagerGUI.Forms
             startToolStripMenuItem.Enabled = hostStopped;
             stopToolStripMenuItem.Enabled = !hostStopped;
             // edit buttons
-            bool canEdit = hostStopped;
+            bool canEdit = true; // hostStopped;
             toolStripMenuItemEditHost.Enabled = canEdit;
             toolStripButtonEditHost.Enabled = canEdit;
             editHostToolStripMenuItem.Enabled = canEdit;
@@ -471,6 +471,7 @@ namespace SSHTunnelManagerGUI.Forms
 
         private void editHost(HostViewModel host)
         {
+            var oldName = host.Name;
             var hd = new HostDialog(HostDialog.EMode.EditHost, _hostsManager.HostInfoList) { Host = host.Model.Info };
             var res = hd.ShowDialog(this);
             if (res == DialogResult.Cancel)
@@ -478,16 +479,14 @@ namespace SSHTunnelManagerGUI.Forms
                 return;
             }
 
-            if (host.Model.Link.Status != ELinkStatus.Stopped)
+            if (Settings.Default.HostsBeingStartedOnLastTime?.Contains(oldName) == true)
             {
-                var hvm = host;
-                var hosts = _hostsManager.DependentHosts(hvm, true).Select(vm => vm.Model);
-                foreach (var it in hosts.Reverse().Where(h => h.Link.Status != ELinkStatus.Stopped))
-                    it.Link.Stop();
-                if (hvm.Model.Link.Status != ELinkStatus.Stopped)
-                    hvm.Model.Link.Stop();
+                Settings.Default.HostsBeingStartedOnLastTime.Remove(oldName);
+                Settings.Default.Save();
             }
-
+            if (host.Model.Link.Status != ELinkStatus.Stopped)
+                stopHost(host);
+            
             var dependentHosts =
                 _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Select(ov => ov.Object).
                 Where(m => m.Model.Info.DependsOn == host.Model.Info);
@@ -608,6 +607,11 @@ namespace SSHTunnelManagerGUI.Forms
             // stop all childrens
             var hvm = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
 
+            stopHost(hvm);
+        }
+
+        private void stopHost(HostViewModel hvm)
+        {
             if (Settings.Default.HostsBeingStartedOnLastTime == null)
                 Settings.Default.HostsBeingStartedOnLastTime = new StringCollection();
             if (Settings.Default.HostsBeingStartedOnLastTime.Contains(hvm.Name))
@@ -621,6 +625,7 @@ namespace SSHTunnelManagerGUI.Forms
             {
                 host.Link.Stop();
             }
+
             if (hvm.Model.Link.Status != ELinkStatus.Stopped)
                 hvm.Model.Link.Stop();
         }
@@ -667,6 +672,11 @@ namespace SSHTunnelManagerGUI.Forms
             {
                 Logger.Log.Error(e.Message, e);
             }
+        }
+
+        public override void Exit()
+        {
+            exit();
         }
 
         private void exit()

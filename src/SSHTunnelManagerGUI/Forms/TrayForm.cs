@@ -169,6 +169,11 @@ namespace SSHTunnelManagerGUI.Forms
 
         private void exitClick(object sender, EventArgs e)
         {
+            Exit();
+        }
+
+        public virtual void Exit()
+        {
             ReallyClose();
         }
 
