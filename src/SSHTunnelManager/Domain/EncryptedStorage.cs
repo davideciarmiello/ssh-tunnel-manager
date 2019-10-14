@@ -104,7 +104,8 @@ namespace SSHTunnelManager.Domain
                 host.DependsOn = hostsByName[depStr];
             }
 
-            data.Hosts = DevExpress.Utils.Algorithms.TopologicalSort(data.Hosts, new HostInfoComparer()).Reverse().ToList();
+            //data.Hosts = DevExpress.Utils.Algorithms.TopologicalSort(data.Hosts, new HostInfoComparer()).Reverse().ToList();
+            data.Hosts = data.Hosts.OrderBy(x => x.Name).ToList();
             return data;
         }
     }

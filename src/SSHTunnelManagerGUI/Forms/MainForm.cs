@@ -265,6 +265,8 @@ namespace SSHTunnelManagerGUI.Forms
                 saveToolStripMenuItem.Enabled = value;
 
                 _modified = value;
+                if (value)
+                    save();
             }
         }
 
@@ -547,6 +549,14 @@ namespace SSHTunnelManagerGUI.Forms
             var viewmodel = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
             var host = viewmodel.Model.Info;
 
+            if (Settings.Default.HostsBeingStartedOnLastTime == null)
+                Settings.Default.HostsBeingStartedOnLastTime = new StringCollection();
+            if (!Settings.Default.HostsBeingStartedOnLastTime.Contains(viewmodel.Name))
+            {
+                Settings.Default.HostsBeingStartedOnLastTime.Add(viewmodel.Name);
+                Settings.Default.Save();
+            }
+
             if (viewmodel.Model.Link.Status != ELinkStatus.Stopped)
                 return;
 
@@ -590,6 +600,15 @@ namespace SSHTunnelManagerGUI.Forms
 
             // stop all childrens
             var hvm = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
+
+            if (Settings.Default.HostsBeingStartedOnLastTime == null)
+                Settings.Default.HostsBeingStartedOnLastTime = new StringCollection();
+            if (Settings.Default.HostsBeingStartedOnLastTime.Contains(hvm.Name))
+            {
+                Settings.Default.HostsBeingStartedOnLastTime.Remove(hvm.Name);
+                Settings.Default.Save();
+            }
+
             var hosts = _hostsManager.DependentHosts(hvm, true).Select(vm => vm.Model);
             foreach (var host in hosts.Reverse().Where(h => h.Link.Status != ELinkStatus.Stopped))
             {
@@ -605,8 +624,7 @@ namespace SSHTunnelManagerGUI.Forms
             {
                 var viewmodel = ((ObjectView<HostViewModel>)_bindingSource.Current).Object;
                 var host = viewmodel.Model.Info;
-
-                ConsoleTools.StartPutty(host, _hostsManager.PuttyProfile);
+                ConsoleTools.StartPutty(host, _hostsManager.PuttyProfile, false);
             }
             catch (Exception e)
             {
@@ -650,7 +668,7 @@ namespace SSHTunnelManagerGUI.Forms
                 return;
 
             theTimer.Enabled = false;
-            saveActiveHostsNames();
+            //saveActiveHostsNames();
             var activeHosts = _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Where(
                 o => o.Object.Model.Link.Status != ELinkStatus.Stopped).Select(o => o.Object.Model).ToList();
             foreach (var host in activeHosts)
@@ -665,19 +683,19 @@ namespace SSHTunnelManagerGUI.Forms
             if (!askForSave())
                 return;
 
-            saveActiveHostsNames();
+            //saveActiveHostsNames();
             ReallyClose();
         }
 
-        private void saveActiveHostsNames()
-        {
-            var hostsNames = _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Where(
-                o => o.Object.Model.Link.Status != ELinkStatus.Stopped).Select(o => o.Object.Name).ToArray();
+        //private void saveActiveHostsNames()
+        //{
+        //    var hostsNames = _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Where(
+        //        o => o.Object.Model.Link.Status != ELinkStatus.Stopped).Select(o => o.Object.Name).ToArray();
 
-            Settings.Default.HostsBeingStartedOnLastTime = new StringCollection();
-            Settings.Default.HostsBeingStartedOnLastTime.AddRange(hostsNames);
-            Settings.Default.Save();
-        }
+        //    Settings.Default.HostsBeingStartedOnLastTime = new StringCollection();
+        //    Settings.Default.HostsBeingStartedOnLastTime.AddRange(hostsNames);
+        //    Settings.Default.Save();
+        //}
 
         private void save()
         {

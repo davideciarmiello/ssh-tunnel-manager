@@ -19,10 +19,10 @@ namespace SSHTunnelManager.Domain
         public const string PsftpLocation = "Tools\\psftp.exe";
         public const string FileZillaLocation = "Tools\\FileZilla\\filezilla.exe";
 
-        public static void StartPutty(HostInfo host, PuttyProfile profile)
+        public static void StartPutty(HostInfo host, PuttyProfile profile, bool addTunnels)
         {
             var fileName = Path.Combine(Util.Helper.StartupPath, PuttyLocation);
-            var args = PuttyArguments(host, profile, host.AuthType);
+            var args = PuttyArguments(host, profile, host.AuthType, addTunnels);
             Process.Start(fileName, args);
         }
 
@@ -40,7 +40,7 @@ namespace SSHTunnelManager.Domain
             Process.Start(fileName, args);
         }
 
-        public static string PuttyArguments(HostInfo host, PuttyProfile profile, AuthenticationType authType)
+        public static string PuttyArguments(HostInfo host, PuttyProfile profile, AuthenticationType authType, bool addTunnels)
         {
             // example: -ssh -load _stm_preset_ username@domainName -P 22 -pw password -D 5000 -L 44333:username.dyndns.org:44333
 
@@ -51,7 +51,7 @@ namespace SSHTunnelManager.Domain
             }
 
             var startShellOption = "";
-            if (string.IsNullOrWhiteSpace(host.RemoteCommand))
+            if (string.IsNullOrWhiteSpace(host.RemoteCommand) && addTunnels)
             {
                 startShellOption = " -N";
             }
@@ -77,17 +77,21 @@ namespace SSHTunnelManager.Domain
                 default:
                     throw new ArgumentOutOfRangeException("authType");
             }
-            var sb = new StringBuilder(args);
-            foreach (var tunnelArg in host.Tunnels.Select(tunnelArguments))
-            {
-                sb.Append(tunnelArg);
-            }
 
-            args = sb.ToString();
+            if (addTunnels)
+            {
+                var sb = new StringBuilder(args);
+                foreach (var tunnelArg in host.Tunnels.Select(tunnelArguments))
+                {
+                    sb.Append(tunnelArg);
+                }
+
+                args = sb.ToString();
+            }
 
             Logger.Log.DebugFormat(@"plink.exe {0}", args.Replace("-pw " + host.Password + " ", "-pw ********* "));
 
-            if (host.Tunnels.Any())
+            if (addTunnels && host.Tunnels.Any())
             {
                 var ports = host.Tunnels.Select(x => x.LocalPort).ToList();
                 var ipGP = IPGlobalProperties.GetIPGlobalProperties();

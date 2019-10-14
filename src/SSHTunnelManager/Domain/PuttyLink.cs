@@ -261,7 +261,7 @@ namespace SSHTunnelManager.Domain
                                        RedirectStandardError = true,
                                        RedirectStandardOutput = true,
                                        RedirectStandardInput = true,
-                                       Arguments = ConsoleTools.PuttyArguments(Host, _profile, Host.AuthType)
+                                       Arguments = ConsoleTools.PuttyArguments(Host, _profile, Host.AuthType, true)
                                    }
             };
 
