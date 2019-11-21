@@ -53,14 +53,14 @@ namespace SSHTunnelManagerGUI
 
                 // Apply config
                 var cfg = new Config
-                              {
-                                  RestartEnabled = Settings.Default.Config_RestartEnabled,
-                                  MaxAttemptsCount = Settings.Default.Config_MaxAttemptsCount,
-                                  RestartDelay = Settings.Default.Config_RestartDelay,
-                                  DelayInsteadStop = Settings.Default.Config_AfterMaxAttemptsMakeDelay,
-                                  RestartHostsWithWarnings = Settings.Default.Config_RestartHostsWithWarnings,
-                                  RestartHostsWithWarningsInterval = Settings.Default.Config_RestartHostsWithWarningsInterval
-                              };
+                {
+                    RestartEnabled = Settings.Default.Config_RestartEnabled,
+                    MaxAttemptsCount = Settings.Default.Config_MaxAttemptsCount,
+                    RestartDelay = Settings.Default.Config_RestartDelay,
+                    DelayInsteadStop = Settings.Default.Config_AfterMaxAttemptsMakeDelay,
+                    RestartHostsWithWarnings = Settings.Default.Config_RestartHostsWithWarnings,
+                    RestartHostsWithWarningsInterval = Settings.Default.Config_RestartHostsWithWarningsInterval
+                };
                 Logger.SetThresholdForAppender(HostLogDelegateAppender, Settings.Default.Config_TraceDebug ? Level.Debug : Level.Info);
 
                 var hm = new HostsManager<HostViewModel>(cfg, startUpDlg.Storage, startUpDlg.Filename, startUpDlg.Password);
@@ -74,7 +74,12 @@ namespace SSHTunnelManagerGUI
                     firstStart = false;
 
                     Application.Run(mainForm);
-
+                    if (mainForm.ReloadSourceRequested)
+                    {
+                        startUpDlg.Storage.Load(startUpDlg.Filename, startUpDlg.Password);
+                        hm = new HostsManager<HostViewModel>(cfg, startUpDlg.Storage, startUpDlg.Filename, startUpDlg.Password);
+                        continue;
+                    }
                     if (mainForm.ChangeSourceRequested)
                     {
                         startUpDlg = new StartUpDialog();

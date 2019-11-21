@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using SSHTunnelManager.Business;
@@ -38,10 +39,14 @@ namespace SSHTunnelManagerGUI.Forms
             startPsftpToolStripMenuItem.Image = new Icon(Resources.psftp, 16, 16).ToBitmap();
             centerMe();
 
-            _titleFilename = Path.GetFileName(manager.Filename);
+            _hostsManager = manager;
+            _titleFilename = Path.GetFileName(_hostsManager.Filename);
+            var fi = new FileInfo(_hostsManager.Filename);
+            fileSystemWatcher1.Filter = fi.Name;
+            fileSystemWatcher1.Path = fi.Directory?.FullName;
+            fileSystemWatcher1.EnableRaisingEvents = true;
             Modified = false;
 
-            _hostsManager = manager;
             foreach (var host in _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Select(o => o.Object))
             {
                 host.StatusChanged += onHostStatusChanged;
@@ -98,7 +103,10 @@ namespace SSHTunnelManagerGUI.Forms
             tunnelsGridView.BackgroundColor = backColor;
             tunnelsGridView.RowsDefaultCellStyle.BackColor = backColor;*/
         }
+        private void MainForm_Load(object sender, EventArgs e)
+        {
 
+        }
         private void NetworkChangeOnNetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs networkAvailabilityEventArgs)
         {
             if (networkAvailabilityEventArgs.IsAvailable)
@@ -253,6 +261,7 @@ namespace SSHTunnelManagerGUI.Forms
         }
 
         public bool ChangeSourceRequested { get; private set; }
+        public bool ReloadSourceRequested { get; private set; }
 
         private bool Modified
         {
@@ -265,7 +274,7 @@ namespace SSHTunnelManagerGUI.Forms
                 saveToolStripMenuItem.Enabled = value;
 
                 _modified = value;
-                if (value)
+                if (value && editedFromOthers == false)
                     save();
             }
         }
@@ -486,7 +495,7 @@ namespace SSHTunnelManagerGUI.Forms
             }
             if (host.Model.Link.Status != ELinkStatus.Stopped)
                 stopHost(host);
-            
+
             var dependentHosts =
                 _hostsManager.Hosts.Cast<ObjectView<HostViewModel>>().Select(ov => ov.Object).
                 Where(m => m.Model.Info.DependsOn == host.Model.Info);
@@ -713,11 +722,13 @@ namespace SSHTunnelManagerGUI.Forms
         //    Settings.Default.HostsBeingStartedOnLastTime.AddRange(hostsNames);
         //    Settings.Default.Save();
         //}
-
+        private bool _saving;
         private void save()
         {
             if (!Modified)
                 return;
+            _saving = true;
+            tmrSaving.Enabled = false;
             _hostsManager.Save();
             if (_savePasswordRequested)
             {
@@ -726,6 +737,12 @@ namespace SSHTunnelManagerGUI.Forms
                 _savePasswordRequested = false;
             }
             Modified = false;
+            tmrSaving.Enabled = true;
+        }
+        private void tmrSaving_Tick(object sender, EventArgs e)
+        {
+            tmrSaving.Enabled = false;
+            _saving = false;
         }
 
         #endregion
@@ -1129,9 +1146,43 @@ namespace SSHTunnelManagerGUI.Forms
 
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private bool reloading;
+        private void mnuReloadStorage_Click(object sender, EventArgs e)
         {
-
+            if (reloading)
+                return;
+            reloading = true;
+            var res = MessageBox.Show($@"{(editedFromOthers ? "Lo storage è stato modificato esternamente.\r\n" : "")}Ricaricare lo storage?", @"Ricarica storage", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (res == DialogResult.Yes)
+            {
+                ReloadSourceRequested = true;
+                editedFromOthers = false;
+                Modified = false;
+                exit();
+            }
+            reloading = false;
         }
+
+        private bool editedFromOthers;
+        private void fileSystemWatcher1_Changed(object sender, FileSystemEventArgs e)
+        {
+            if (_saving)
+                return;
+            editedFromOthers = true;
+            if (Focused || Visible)
+                mnuReloadStorage.PerformClick();
+        }
+
+        private void fileSystemWatcher1_Renamed(object sender, RenamedEventArgs e)
+        {
+            fileSystemWatcher1_Changed(sender, (FileSystemEventArgs)e);
+        }
+
+        private void MainForm_VisibleChanged(object sender, EventArgs e)
+        {
+            if (editedFromOthers)
+                fileSystemWatcher1_Changed(null, null);
+        }
+
     }
 }

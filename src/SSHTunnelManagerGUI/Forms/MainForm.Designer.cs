@@ -50,6 +50,7 @@ namespace SSHTunnelManagerGUI.Forms
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.mnuReloadStorage = new System.Windows.Forms.ToolStripMenuItem();
             this.changeStorageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changePasswordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
@@ -106,6 +107,8 @@ namespace SSHTunnelManagerGUI.Forms
             this.toolStripMenuItemRemoveHost = new System.Windows.Forms.ToolStripMenuItem();
             this.theTimer = new System.Windows.Forms.Timer(this.components);
             this.timerPrivateKeysCleanUp = new System.Windows.Forms.Timer(this.components);
+            this.fileSystemWatcher1 = new System.IO.FileSystemWatcher();
+            this.tmrSaving = new System.Windows.Forms.Timer(this.components);
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             label7 = new System.Windows.Forms.Label();
@@ -128,6 +131,7 @@ namespace SSHTunnelManagerGUI.Forms
             ((System.ComponentModel.ISupportInitialize)(this.tunnelsGridView)).BeginInit();
             this.tabPageLog.SuspendLayout();
             this.contextMenuStripHost.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -242,6 +246,7 @@ namespace SSHTunnelManagerGUI.Forms
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveToolStripMenuItem,
             this.toolStripSeparator1,
+            this.mnuReloadStorage,
             this.changeStorageToolStripMenuItem,
             this.changePasswordToolStripMenuItem,
             this.toolStripSeparator4,
@@ -261,6 +266,12 @@ namespace SSHTunnelManagerGUI.Forms
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // mnuReloadStorage
+            // 
+            this.mnuReloadStorage.Name = "mnuReloadStorage";
+            resources.ApplyResources(this.mnuReloadStorage, "mnuReloadStorage");
+            this.mnuReloadStorage.Click += new System.EventHandler(this.mnuReloadStorage_Click);
             // 
             // changeStorageToolStripMenuItem
             // 
@@ -711,6 +722,20 @@ namespace SSHTunnelManagerGUI.Forms
             this.timerPrivateKeysCleanUp.Interval = 300000;
             this.timerPrivateKeysCleanUp.Tick += new System.EventHandler(this.timerPrivateKeysCleanUp_Tick);
             // 
+            // fileSystemWatcher1
+            // 
+            this.fileSystemWatcher1.EnableRaisingEvents = true;
+            this.fileSystemWatcher1.SynchronizingObject = this;
+            this.fileSystemWatcher1.Changed += new System.IO.FileSystemEventHandler(this.fileSystemWatcher1_Changed);
+            this.fileSystemWatcher1.Created += new System.IO.FileSystemEventHandler(this.fileSystemWatcher1_Changed);
+            this.fileSystemWatcher1.Deleted += new System.IO.FileSystemEventHandler(this.fileSystemWatcher1_Changed);
+            this.fileSystemWatcher1.Renamed += new System.IO.RenamedEventHandler(this.fileSystemWatcher1_Renamed);
+            // 
+            // tmrSaving
+            // 
+            this.tmrSaving.Interval = 2000;
+            this.tmrSaving.Tick += new System.EventHandler(this.tmrSaving_Tick);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -724,6 +749,7 @@ namespace SSHTunnelManagerGUI.Forms
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
+            this.VisibleChanged += new System.EventHandler(this.MainForm_VisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this.hostsGridView)).EndInit();
             this.mainMenuStrip.ResumeLayout(false);
             this.mainMenuStrip.PerformLayout();
@@ -744,6 +770,7 @@ namespace SSHTunnelManagerGUI.Forms
             ((System.ComponentModel.ISupportInitialize)(this.tunnelsGridView)).EndInit();
             this.tabPageLog.ResumeLayout(false);
             this.contextMenuStripHost.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -818,5 +845,8 @@ namespace SSHTunnelManagerGUI.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn tgvDstHostColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn tgvDstPortColumn;
         private System.Windows.Forms.Timer timerPrivateKeysCleanUp;
+        private System.Windows.Forms.ToolStripMenuItem mnuReloadStorage;
+        private System.IO.FileSystemWatcher fileSystemWatcher1;
+        private System.Windows.Forms.Timer tmrSaving;
     }
 }

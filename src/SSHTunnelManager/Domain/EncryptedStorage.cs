@@ -18,12 +18,17 @@ namespace SSHTunnelManager.Domain
         private static readonly byte[] _passwordCheckString = Encoding.ASCII.GetBytes(@"MAGIC");
         private static readonly XmlSerializer _serializer = new XmlSerializer(typeof(EncryptedStorageContent));
 
+        public EncryptedStorage(string filename, string password)
+        {
+            Load(filename, password);
+        }
+
         /// <summary>
         /// Load storage from file.
         /// </summary>
         /// <param name="filename">Full filepath for encrypted storage file.</param>
         /// <param name="password">Master password for encrypted storage file.</param>
-        public EncryptedStorage(string filename, string password)
+        public void Load(string filename, string password)
         {
             if (filename == null) throw new ArgumentNullException("filename");
             if (password == null) throw new ArgumentNullException("password");

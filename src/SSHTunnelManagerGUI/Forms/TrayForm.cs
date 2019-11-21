@@ -65,7 +65,7 @@ namespace SSHTunnelManagerGUI.Forms
                 _theNotifyIcon.Text = value;
             }
         }
-        
+
         public new Icon Icon
         {
             get { return base.Icon; }
@@ -107,18 +107,20 @@ namespace SSHTunnelManagerGUI.Forms
         {
             if (Visible)
                 Hide();
-
+            if (WindowState != FormWindowState.Minimized)
+                visibleFormWindowState = WindowState;
             WindowState = FormWindowState.Minimized;
         }
 
+        private FormWindowState visibleFormWindowState = FormWindowState.Normal;
         private void restoreFromTray()
         {
             if (!Visible)
                 Show();
             if (!Focused)
                 Activate();
-
-            WindowState = FormWindowState.Normal;
+            if (WindowState == FormWindowState.Minimized)
+                WindowState = visibleFormWindowState;
         }
 
         #region Handlers
@@ -149,7 +151,8 @@ namespace SSHTunnelManagerGUI.Forms
             if (WindowState == FormWindowState.Minimized)
             {
                 hideToTray();
-            } else
+            }
+            else
             {
                 restoreFromTray();
             }
