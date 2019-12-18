@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using SSHTunnelManager.Business;
 using SSHTunnelManager.Domain;
@@ -45,6 +46,12 @@ namespace SSHTunnelManagerGUI
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
+                if (!AppDomain.CurrentDomain.FriendlyName.EndsWith("vshost.exe"))
+                {
+                    Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+                    Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                    AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+                }
                 var startUpArgs = parseArgs(args);
 
                 var startUpDlg = new StartUpDialog();
@@ -122,6 +129,17 @@ namespace SSHTunnelManagerGUI
             }
 
             return ret;
+        }
+        static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            // File.AppendAllText("NicProxer.ThreadException.txt", string.Format("{0} - {1}{2}", DateTime.Now, e.Exception, Environment.NewLine));
+            MessageBox.Show(e.Exception.ToString(), "Unhandled Thread Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            //   File.AppendAllText("NicProxer.UnhandledException.txt", string.Format("{0} - {1}{2}", DateTime.Now, e.ExceptionObject, Environment.NewLine));
+            MessageBox.Show(e.ExceptionObject.ToString(), "Unhandled UI Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         // Look at all currently runninng processes and see if there is already one of

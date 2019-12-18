@@ -134,15 +134,18 @@ namespace SSHTunnelManager.Domain
             {
                 throw new InvalidOperationException(Resources.PuttyLink_Error_LinkAlreadyStarted);
             }
+
+            asyncStartStack = Environment.StackTrace;
             Thread thread = new Thread(Start) { IsBackground = true };
             thread.Start();
         }
 
+        private string asyncStartStack;
         public void Start()
         {
             if (Status != ELinkStatus.Stopped)
             {
-                throw new InvalidOperationException(Resources.PuttyLink_Error_LinkAlreadyStarted);
+                throw new InvalidOperationException(Resources.PuttyLink_Error_LinkAlreadyStarted + " - Stack: " + asyncStartStack);
             }
 
             try
