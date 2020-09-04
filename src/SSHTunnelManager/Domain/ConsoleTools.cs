@@ -21,23 +21,23 @@ namespace SSHTunnelManager.Domain
 
         public static void StartPutty(HostInfo host, PuttyProfile profile, bool addTunnels)
         {
-            var fileName = Path.Combine(Util.Helper.StartupPath, PuttyLocation);
+            var fileName = new FileInfo(Path.Combine(Util.Helper.StartupPath, PuttyLocation));
             var args = PuttyArguments(host, profile, host.AuthType, addTunnels);
-            Process.Start(fileName, args);
+            Process.Start(new ProcessStartInfo(fileName.FullName, args) { WorkingDirectory = fileName.Directory.FullName });
         }
 
         public static void StartPsftp(HostInfo host)
         {
-            var fileName = Path.Combine(Util.Helper.StartupPath, PsftpLocation);
+            var fileName = new FileInfo(Path.Combine(Util.Helper.StartupPath, PsftpLocation));
             var args = psftpArguments(host);
-            Process.Start(fileName, args);
+            Process.Start(new ProcessStartInfo(fileName.FullName, args) { WorkingDirectory = fileName.Directory.FullName });
         }
 
         public static void StartFileZilla(HostInfo host)
         {
-            var fileName = Path.Combine(Util.Helper.StartupPath, FileZillaLocation);
-            var args = string.Format(@"sftp://{0}:{1}@{2}:{3}", host.Username, host.Password, host.Hostname, host.Port);
-            Process.Start(fileName, args);
+            var fileName = new FileInfo(Path.Combine(Util.Helper.StartupPath, FileZillaLocation));
+            var args = $@"sftp://{host.Username}:{host.Password}@{host.Hostname}:{host.Port}";
+            Process.Start(new ProcessStartInfo(fileName.FullName, args) { WorkingDirectory = fileName.Directory.FullName });
         }
 
         public static string PuttyArguments(HostInfo host, PuttyProfile profile, AuthenticationType authType, bool addTunnels)

@@ -112,28 +112,33 @@ namespace SSHTunnelManagerGUI.Forms
             if (networkAvailabilityEventArgs.IsAvailable)
                 NetworkChangeOnNetworkAddressChanged(sender, networkAvailabilityEventArgs);
         }
+        private object lockObj = new object();
         private void NetworkChangeOnNetworkAddressChanged(object sender, EventArgs eventArgs)
         {
             Thread t = new Thread(() =>
             {
                 try
                 {
-                    var hosts = _hostsManager.HostsList.Where(h => h.Link.Status == ELinkStatus.Starting || h.Link.Status == ELinkStatus.Waiting).ToList();
-                    foreach (var host in hosts)
+                    lock (lockObj)
                     {
-                        if (host.Link.Status != ELinkStatus.Stopped)
+                        var hosts = _hostsManager.HostsList.Where(h => h.Link.Status == ELinkStatus.Starting || h.Link.Status == ELinkStatus.Waiting).ToList();
+                        foreach (var host in hosts)
                         {
-                            // Status could be changed from list creating
-                            host.Link.Stop();
-                            if (!host.Link.WaitForStop())
+                            if (host.Link.Status != ELinkStatus.Stopped)
                             {
-                                Logger.Log.WarnFormat(
-                                    "STOP action for host '{0}' timed out. Skipping host in this Restart-Hosts-With-Warnings tick.",
-                                    host.Info.Name);
-                                continue;
+                                // Status could be changed from list creating
+                                host.Link.Stop();
+                                if (!host.Link.WaitForStop())
+                                {
+                                    Logger.Log.WarnFormat(
+                                        "STOP action for host '{0}' timed out. Skipping host in this Restart-Hosts-With-Warnings tick.",
+                                        host.Info.Name);
+                                    continue;
+                                }
                             }
+                            host.Link.AsyncStart();
+                            host.Link.WaitForStart(1);
                         }
-                        host.Link.AsyncStart();
                     }
                 }
                 catch (Exception ex)
@@ -633,10 +638,14 @@ namespace SSHTunnelManagerGUI.Forms
             foreach (var host in hosts.Reverse().Where(h => h.Link.Status != ELinkStatus.Stopped))
             {
                 host.Link.Stop();
+                host.Link.WaitForStop(2);
             }
 
             if (hvm.Model.Link.Status != ELinkStatus.Stopped)
+            {
                 hvm.Model.Link.Stop();
+                hvm.Model.Link.WaitForStop(2);
+            }
         }
 
         private void startPutty()

@@ -199,7 +199,6 @@ namespace SSHTunnelManager.Domain
 
         public void Stop()
         {
-            _stopRequested = true;
             stop();
         }
 
@@ -207,13 +206,16 @@ namespace SSHTunnelManager.Domain
         {
             if (Status == ELinkStatus.Stopped)
                 return;
+            _stopRequested = true;
             try
             {
+                _deferredCallTimer?.Dispose();
                 _process.Kill();
                 _multilineError.Clear();
             }
             catch (Exception)
             {
+                Status = ELinkStatus.Stopped;
             }
         }
 
@@ -330,6 +332,8 @@ namespace SSHTunnelManager.Domain
 
         private void errorDataHandler(object o, DataReceivedEventArgs args)
         {
+            if (_stopRequested)
+                return;
             if (args.Data == null)
                 return;
             ThreadContext.Properties[@"Host"] = Host; // Set up context for working thread
